@@ -119,8 +119,6 @@ void Slots::SlotMachine::CalculateWins(const std::vector<Slots::Symbol>& Result)
 
 const float Slots::SlotMachine::GetPayout(const std::unordered_map<Slots::Symbol, int32_t>& FrequencyTable)
 {
-	// For the case when we have all distinct, then
-	// SymbolFrequency = 1
 
 	// Find the most frequent symbol and how often it is occurring
 	Slots::Symbol MostFrequentSymbol = NONE;
@@ -134,7 +132,7 @@ const float Slots::SlotMachine::GetPayout(const std::unordered_map<Slots::Symbol
 		}
 	}
 
-	// All symbols are distinct
+	// All symbols are distinct from each other
 	if (SymbolFrequency == 1)
 	{
 		return 0.0f;
