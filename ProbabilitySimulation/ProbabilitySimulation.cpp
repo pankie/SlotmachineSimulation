@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <fstream>
 #include <chrono>
-#include <array>
 #include "SymbolManager.h"
 #include "SlotMachine.h"
 #include "Reel.h"
@@ -115,7 +114,7 @@ int main()
 	Slots::SlotMachine SlotMachine(Rows);
 
 	// ------------------------------------------------------------------
-	// Initialize the slotmachine
+	// Initialize the slot machine
 	{
 		// Initialize the reels
 		Slots::Reel Reel0;
@@ -157,14 +156,5 @@ int main()
 	
 	std::cout << "Time lapsed (seconds): " << Since(Start).count() << "\n";
 	const Slots::SlotmachineResults Results = SlotMachine.GetSlotmachineResults();
-	std::cout
-		<< "Bonuses: \t\t"			<< Results.Bonuses			<< '\n'
-		<< "Wild attained: \t\t"	<< Results.AllWildCount		<< '\n'
-		<< "Games Played: \t\t"		<< Results.GamesPlayed		<< '\n'
-		<< "Games Won: \t\t"		<< Results.GamesWon			<< '\n'
-		<< "Credits Spent: \t\t"	<< Results.CreditSpent		<< '\n'
-		<< "Credits Won: \t\t"		<< Results.TotalCreditsWon	<< '\n'
-		<< "BonusCreditsWon: \t"	<< Results.BonusCreditsWon	<< '\n';
-
-	// SlotMachine.PrintResult();
+	Results.Display();
 }

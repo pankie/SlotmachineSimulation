@@ -8,8 +8,7 @@ namespace Slots
 	public:
 		SlotmachineResults();
 		virtual ~SlotmachineResults();
-
-
+		void Display() const;
 
 	public:
 		int32_t	GamesPlayed		= 0;

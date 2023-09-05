@@ -10,7 +10,7 @@ namespace Slots
 	public:
 		Coin(const int32_t Value, const int32_t Weight);
 		Coin(const Coin& Other);
-		~Coin();
+		virtual ~Coin();
 
 	public:
 		const std::string ToString();
