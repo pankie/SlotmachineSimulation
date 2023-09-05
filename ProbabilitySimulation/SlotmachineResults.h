@@ -17,6 +17,7 @@ namespace Slots
 		int32_t Bonuses			= 0;
 		int32_t AllWildCount	= 0;
 		double CreditSpent		= 0.0;
-		double CreditsWon		= 0.0;
+		double TotalCreditsWon	= 0.0;
+		double BonusCreditsWon	= 0.0;
 	};
 };

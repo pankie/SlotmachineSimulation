@@ -8,6 +8,7 @@
 #include "SymbolManager.h"
 #include "SlotMachine.h"
 #include "Reel.h"
+#include "BonusGame.h"
 
 int32_t CopyPaylines(const std::string FilePath, std::vector<int32_t, std::allocator<int32_t>>& OutPaylines)
 {
@@ -63,6 +64,49 @@ void CopyDataToReel(const std::string FilePath, Slots::Reel& OutReel)
 	OutReel.Initialize(Data);
 }
 
+void CopyCoinWeightTable(const std::string FilePath, Slots::BonusGame& OutBonusGame)
+{
+	std::vector<Slots::Coin> Coins;
+	std::fstream File;
+	File.open(FilePath, std::ios::in);
+	if (File.is_open())
+	{
+		std::string Content;
+		while (std::getline(File, Content))
+		{
+			std::string StrValue; 
+			std::string StrWeight;
+			bool bNext = false;
+			for (const char Character : Content)
+			{
+				const bool bFillNextValue = Character == ',';
+				if (bFillNextValue)
+				{
+					bNext = true;
+					continue;
+				}
+
+				if (!bNext)
+				{
+					StrValue += Character;
+				}
+				else
+				{
+					StrWeight += Character;
+				}
+			}
+
+			const int32_t Value = static_cast<int32_t>(stoi(StrValue));
+			const int32_t Weight = static_cast<int32_t>(stoi(StrWeight));
+			Slots::Coin Coin(Value, Weight);
+			// std::cout << Coin.ToString() << '\n';
+			Coins.push_back(Coin);
+		}
+	}
+
+	OutBonusGame.InitializeWeightedCoins(Coins);
+}
+
 int main()
 {
     std::cout << "Probability Simulation for a slot machine!\n";
@@ -71,7 +115,7 @@ int main()
 	Slots::SlotMachine SlotMachine(Rows);
 
 	// ------------------------------------------------------------------
-	// Add data
+	// Initialize the slotmachine
 	{
 		// Initialize the reels
 		Slots::Reel Reel0;
@@ -89,6 +133,12 @@ int main()
 		std::vector<int32_t, std::allocator<int32_t>> Paylines(5 * 9);
 		const int32_t TotalPaylines = CopyPaylines("Paylines3x3.txt", Paylines);
 		SlotMachine.SetPaylines(Paylines, TotalPaylines);
+
+		// Initialize the bonus game
+		Slots::BonusGame BonusGame;
+		CopyCoinWeightTable("CoinWeightTable.txt", BonusGame);
+		
+		SlotMachine.SetBonusGame(BonusGame);
 	}
 
 	auto Since = [](std::chrono::time_point<std::chrono::steady_clock> const& Start)
@@ -99,7 +149,7 @@ int main()
 
 	const std::chrono::time_point<std::chrono::steady_clock> Start = std::chrono::steady_clock::now();
 	// Play the game a couple of times!
-	const int32_t BigNumber = 1000000;
+	const int32_t BigNumber = 100;
 	for (int32_t i = 0; i < BigNumber; i++)
 	{
 		SlotMachine.Play();
@@ -108,12 +158,13 @@ int main()
 	std::cout << "Time lapsed (seconds): " << Since(Start).count() << "\n";
 	const Slots::SlotmachineResults Results = SlotMachine.GetSlotmachineResults();
 	std::cout
-		<< "Bonuses: \t"		<< Results.Bonuses		<< '\n'
-		<< "Wild attained: \t"	<< Results.AllWildCount << '\n'
-		<< "Games Played: \t"	<< Results.GamesPlayed	<< '\n'
-		<< "Games Won: \t"		<< Results.GamesWon		<< '\n'
-		<< "Credits Spent: \t"	<< Results.CreditSpent	<< '\n'
-		<< "Credits Won: \t"	<< Results.CreditsWon	<< '\n';
+		<< "Bonuses: \t\t"			<< Results.Bonuses			<< '\n'
+		<< "Wild attained: \t\t"	<< Results.AllWildCount		<< '\n'
+		<< "Games Played: \t\t"		<< Results.GamesPlayed		<< '\n'
+		<< "Games Won: \t\t"		<< Results.GamesWon			<< '\n'
+		<< "Credits Spent: \t\t"	<< Results.CreditSpent		<< '\n'
+		<< "Credits Won: \t\t"		<< Results.TotalCreditsWon	<< '\n'
+		<< "BonusCreditsWon: \t"	<< Results.BonusCreditsWon	<< '\n';
 
 	// SlotMachine.PrintResult();
 }

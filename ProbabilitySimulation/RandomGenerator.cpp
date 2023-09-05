@@ -10,3 +10,12 @@ const int32_t RandomGenerator::UniformRandom(const int32_t Min, const int32_t Ma
 
 	return Distribution(Generator);
 }
+
+const double RandomGenerator::UniformRandom(const float Min, const float Max)
+{
+	static std::random_device RandomDevice;
+	static std::mt19937 Generator(RandomDevice());
+	std::uniform_real_distribution<double> Distribution(Min, Max);
+
+	return Distribution(Generator);
+}

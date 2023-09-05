@@ -25,6 +25,11 @@ void Slots::SlotMachine::SetPaylines(const std::vector<int32_t, std::allocator<i
 	this->Paylines		= Paylines;
 }
 
+void Slots::SlotMachine::SetBonusGame(const Slots::BonusGame& BonusGame)
+{
+	BonusGamePtr = std::make_unique<Slots::BonusGame>(BonusGame);
+}
+
 void Slots::SlotMachine::Play()
 {
 	int32_t ResultIndex			= 0;
@@ -76,6 +81,9 @@ void Slots::SlotMachine::CalculateWins(const std::vector<Slots::Symbol>& Result)
 	const int32_t TotalColumns					= static_cast<int32_t>(Reels.size());
 	// const std::vector<Slots::Symbol>& Result	= GetResult();
 
+	bool bWon = false;
+
+
 	for (size_t i = 0; i < TotalPaylines; i++)
 	{
 		// Stores the amount of occurring symbols in a map
@@ -110,10 +118,15 @@ void Slots::SlotMachine::CalculateWins(const std::vector<Slots::Symbol>& Result)
 		{
 			// std::cout << "----------------------------------" << std::endl;
 			// Display(Result);
-			SlotmachineResults.GamesWon		= SlotmachineResults.GamesWon + 1;
-			SlotmachineResults.CreditsWon	= SlotmachineResults.CreditsWon + Total;
+			SlotmachineResults.TotalCreditsWon	= SlotmachineResults.TotalCreditsWon + Total;
+			bWon = true;
 			// std::cout << "total wins: " << SlotmachineResults.GamesWon << std::endl;
 		}
+	}
+
+	if (bWon)
+	{
+		SlotmachineResults.GamesWon = SlotmachineResults.GamesWon + 1;
 	}
 }
 
@@ -177,6 +190,13 @@ const float Slots::SlotMachine::GetPayout(const std::unordered_map<Slots::Symbol
 			// Todo: Trigger bonus round
 			// const float Payout = BonusGame.Play();
 			SlotmachineResults.Bonuses = SlotmachineResults.Bonuses + 1;
+			if (BonusGamePtr)
+			{
+				const float Total					= BonusGamePtr->Play(10.0f);
+				SlotmachineResults.BonusCreditsWon	= SlotmachineResults.BonusCreditsWon + Total;
+				return Total;
+			}
+
 			return 0.0f;
 		}
 

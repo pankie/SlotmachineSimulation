@@ -128,6 +128,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BonusGame.cpp" />
+    <ClCompile Include="Coin.cpp" />
     <ClCompile Include="ProbabilitySimulation.cpp" />
     <ClCompile Include="RandomGenerator.cpp" />
     <ClCompile Include="Reel.cpp" />
@@ -136,6 +138,8 @@
     <ClCompile Include="SymbolManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BonusGame.h" />
+    <ClInclude Include="Coin.h" />
     <ClInclude Include="RandomGenerator.h" />
     <ClInclude Include="Reel.h" />
     <ClInclude Include="SlotMachine.h" />
@@ -143,6 +147,7 @@
     <ClInclude Include="SymbolManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="CoinWeightTable.txt" />
     <Text Include="Paylines3x3.txt" />
     <Text Include="ReelData0.txt" />
     <Text Include="ReelData1.txt" />
