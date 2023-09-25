@@ -5,7 +5,7 @@
 // Accumulated weight from coin weighted table
 constexpr float TotalTableWeight = 1401.0f;
 
-Slots::Coin::Coin(const Slots::Coin& Other)
+Slots::Coin::Coin(const Coin& Other)
 	: Value(Other.Value)
 	, Weight(Other.Weight)
 	, Probability(Other.Weight / TotalTableWeight)
@@ -24,9 +24,8 @@ Slots::Coin::~Coin()
 
 }
 
-const std::string Slots::Coin::ToString()
+std::string Slots::Coin::ToString() const
 {
-	// std::string String(Weight + "\t" + Probability);
 	std::ostringstream Table;
 	Table << std::setw(15) << std::left << "Value"			<< '|' << std::setw(15) << std::right << Value << '\n';
 	Table << std::setw(15) << std::left << "Weight" 		<< '|' << std::setw(15) << std::right << Weight << '\n';

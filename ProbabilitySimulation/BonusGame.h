@@ -12,20 +12,22 @@ namespace Slots
 		BonusGame();
 		virtual ~BonusGame();
 
-		const float Play(const float TotalBet);
+		void Simulate() const;
 
-		void InitializeWeightedCoins(const std::vector<Slots::Coin> Coins);
+		float Play(const float TotalBet) const;
+
+		void InitializeWeightedCoins(const std::vector<Coin>& Coins);
 
 	private:
 		struct Entry
 		{
-			Entry(Slots::Coin InCoin, int32_t InWeight) : Coin(InCoin), AccumulatedWeight(InWeight) {}
+			Entry(Coin InCoin, int32_t InWeight) : Coin(InCoin), AccumulatedWeight(InWeight) {}
 			int32_t AccumulatedWeight = 0;
-			const Slots::Coin Coin;
+			const Coin Coin;
 		};
 
-		void AddEntry(const Slots::Coin& Coin);
-		const Slots::Coin GetRandomCoin() const;
+		void AddEntry(const Coin& Coin);
+		Coin GetRandomCoin() const;
 
 
 

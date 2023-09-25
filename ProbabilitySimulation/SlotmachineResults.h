@@ -1,5 +1,7 @@
 #pragma once
+#include "SymbolManager.h"
 #include <cstdint>
+#include <unordered_map>
 
 namespace Slots
 {
@@ -9,14 +11,17 @@ namespace Slots
 		SlotmachineResults();
 		virtual ~SlotmachineResults();
 		void Display() const;
+		void UpdateFrequency(const std::vector<Symbol>& PlayResult);
+		void UpdateFrequency(const Symbol Symbol);
 
 	public:
-		int32_t	GamesPlayed		= 0;
-		int32_t GamesWon		= 0;
-		int32_t Bonuses			= 0;
-		int32_t AllWildCount	= 0;
-		double CreditSpent		= 0.0;
-		double TotalCreditsWon	= 0.0;
-		double BonusCreditsWon	= 0.0;
+		int32_t	GamesPlayed			= 0;
+		int32_t GamesWon			= 0;
+		float TotalCreditSpent		= 0.0f;
+		float BonusCreditsWon		= 0.0f;
+		float BaseGameCreditsWon	= 0.0f;
+
+	private:
+		std::unordered_map<Symbol, uint32_t> FrequencyTable;
 	};
 };

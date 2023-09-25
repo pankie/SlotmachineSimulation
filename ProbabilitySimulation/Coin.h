@@ -13,7 +13,7 @@ namespace Slots
 		virtual ~Coin();
 
 	public:
-		const std::string ToString();
+		std::string ToString() const;
 
 	public:
 		const int32_t Value;

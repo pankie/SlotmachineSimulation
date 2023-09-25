@@ -11,7 +11,7 @@ Slots::Reel::~Reel()
 {
 }
 
-void Slots::Reel::Initialize(const std::vector<Slots::Symbol>& Data)
+void Slots::Reel::Initialize(const std::vector<Symbol>& Data)
 {
 	ReelSymbols = Data;
 }
@@ -24,9 +24,9 @@ void Slots::Reel::Spin()
 	ReelIndex = RandomGenerator::UniformRandom(Min, Max);
 }
 
-const std::vector<Slots::Symbol> Slots::Reel::GetResult(const int32_t Rows)
+std::vector<Slots::Symbol> Slots::Reel::GetResult(const int32_t Rows) const
 {
-	std::vector<Slots::Symbol> Result(Rows);
+	std::vector<Symbol> Result(Rows);
 
 	const size_t Size = ReelSymbols.size();
 	for (int32_t i = 0; i < Rows; i++)
@@ -37,13 +37,14 @@ const std::vector<Slots::Symbol> Slots::Reel::GetResult(const int32_t Rows)
 	return Result;
 }
 
-void Slots::Reel::Print()
+void Slots::Reel::Print() const
 {
 	std::stringstream StringStream;
 	for (int32_t i = 0; i < ReelSymbols.size(); i++)
 	{
-		const Slots::Symbol Symbol		= ReelSymbols[i];
+		const Symbol Symbol				= ReelSymbols[i];
 		const std::string SymbolString	= SymbolManager::ToString(Symbol);
+		
 		StringStream << i << " : " << SymbolString << '\n';
 	}
 

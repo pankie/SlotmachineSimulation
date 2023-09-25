@@ -19,47 +19,48 @@ void Slots::SlotMachine::AddReel(const Reel& Reel)
 	Reels.push_back(Reel);
 }
 
-void Slots::SlotMachine::SetPaylines(const std::vector<int32_t, std::allocator<int32_t>>& Paylines, const int32_t TotalPaylines)
+void Slots::SlotMachine::SetPaylines(const std::vector<int32_t>& Paylines, const int32_t TotalPaylines)
 {
 	this->TotalPaylines = TotalPaylines;
 	this->Paylines		= Paylines;
 }
 
-void Slots::SlotMachine::SetBonusGame(const Slots::BonusGame& BonusGame)
+void Slots::SlotMachine::SetBonusGame(const BonusGame& BonusGame)
 {
 	BonusGamePtr = std::make_unique<Slots::BonusGame>(BonusGame);
 }
 
 void Slots::SlotMachine::Play()
 {
-	int32_t ResultIndex			= 0;
-	const int32_t TotalColumns	= static_cast<int32_t>(Reels.size());
-	std::vector<Slots::Symbol> PlayResult = std::vector<Slots::Symbol>(TotalColumns * Rows);
-	for (Slots::Reel& Reel : Reels)
+	int32_t ResultIndex				= 0;
+	const int32_t TotalColumns		= static_cast<int32_t>(Reels.size());
+	std::vector<Symbol> PlayResult	= std::vector<Symbol>(TotalColumns * Rows);
+	for (Reel& Reel : Reels)
 	{
 		Reel.Spin();
-		const std::vector<Slots::Symbol> ReelResult = Reel.GetResult(Rows);
+		const std::vector<Symbol> ReelResult = Reel.GetResult(Rows);
 		for (int32_t i = 0; i < ReelResult.size(); i++)
 		{
-			const Slots::Symbol Symbol	= ReelResult[i];
+			const Symbol Symbol			= ReelResult[i];
 			PlayResult[ResultIndex]		= Symbol;
 			ResultIndex					= ResultIndex + 1;
 		}
 	}
-
+	
 	CalculateWins(PlayResult);
-	SlotmachineResults.GamesPlayed = SlotmachineResults.GamesPlayed + 1;
-	SlotmachineResults.CreditSpent = SlotmachineResults.CreditSpent + 10.0f;
+	// SlotmachineResults.UpdateFrequency(PlayResult);
+	SlotmachineResults.GamesPlayed		= SlotmachineResults.GamesPlayed + 1;
+	SlotmachineResults.TotalCreditSpent = SlotmachineResults.TotalCreditSpent + 10.0f;
 }
 
-void Slots::SlotMachine::Display(const std::vector<Slots::Symbol>& PlayResult)
+void Slots::SlotMachine::Display(const std::vector<Symbol>& PlayResult) const
 {
 	const int32_t TotalColumns = static_cast<int32_t>(Reels.size());
 	for (int32_t i = 0; i < Rows; i++)
 	{
 		for (int32_t j = 0; j < TotalColumns; j++)
 		{
-			const Slots::Symbol Symbol		= PlayResult[i * TotalColumns + j];
+			const Symbol Symbol		= PlayResult[i * TotalColumns + j];
 			const std::string StringSymbol	= SymbolManager::ToString(Symbol);
 
 			std::cout << StringSymbol << ((j + 1) == TotalColumns ? '\n' : '\t');
@@ -73,37 +74,35 @@ Slots::SlotmachineResults Slots::SlotMachine::GetSlotmachineResults() const
 	return SlotmachineResults;
 }
 
-void Slots::SlotMachine::CalculateWins(const std::vector<Slots::Symbol>& Result)
+void Slots::SlotMachine::CalculateWins(const std::vector<Symbol>& Result)
 {
-	// Assuming there is no paylines of different sizes e.g. 
+	// Assuming there are no paylines of different sizes e.g. 
 	// 3x3 payline matrices contains only fix size of 3 ones each column and not 2 or 1 ones. 
-	const int32_t PaylineSize					= static_cast<int32_t>(Paylines.size()) / TotalPaylines;
-	const int32_t TotalColumns					= static_cast<int32_t>(Reels.size());
-	// const std::vector<Slots::Symbol>& Result	= GetResult();
+	const int32_t PaylineSize	= static_cast<int32_t>(Paylines.size()) / TotalPaylines;
+	// const int32_t TotalColumns	= static_cast<int32_t>(Reels.size());
 
 	bool bWon = false;
-
 
 	for (size_t i = 0; i < TotalPaylines; i++)
 	{
 		// Stores the amount of occurring symbols in a map
 		// corresponding to the payline positions
-		std::unordered_map<Slots::Symbol, int32_t> FrequencyTable;
+		std::unordered_map<Symbol, int32_t> FrequencyTable;
 		for (size_t j = 0; j < PaylineSize; j++)
 		{
 			const size_t ElementIndex = PaylineSize * i + j;
 
 			// Paylines[i] contains 0 or 1
-			if (!Paylines[ElementIndex])
+			if (Paylines[ElementIndex] == 0)
 			{
 				continue;
 			}
 
-			Slots::Symbol Symbol	= Result[j];
-			const bool bNotInTable	= FrequencyTable.find(Symbol) == FrequencyTable.end();
-			if (bNotInTable)
+			// Handle case if Symbol was not found
+			Symbol Symbol = Result[j];
+			if (FrequencyTable.find(Symbol) == FrequencyTable.end())
 			{
-				auto Pair = std::pair<Slots::Symbol, int32_t>(Symbol, 1);
+				auto Pair = std::pair(Symbol, 1);
 				FrequencyTable.insert(Pair);
 				continue;
 			}
@@ -112,16 +111,48 @@ void Slots::SlotMachine::CalculateWins(const std::vector<Slots::Symbol>& Result)
 			int32_t& Value	= FrequencyTable.at(Symbol);
 			Value			= Value + 1;
 		}
-
-		const float Total = GetPayout(FrequencyTable);
-		if (Total > 0.001f)
+		
+		if (const float Total = GetPayout(FrequencyTable) > 1.0f)
 		{
 			// std::cout << "----------------------------------" << std::endl;
 			// Display(Result);
-			SlotmachineResults.TotalCreditsWon	= SlotmachineResults.TotalCreditsWon + Total;
+			SlotmachineResults.BaseGameCreditsWon = SlotmachineResults.BaseGameCreditsWon + Total;
 			bWon = true;
-			// std::cout << "total wins: " << SlotmachineResults.GamesWon << std::endl;
+
+			// break;
 		}
+	}
+
+	// Since B1 is a scatter symbol, it is allowed to occur at least once on every reel,
+	// independent of the paylines, and thus lead to the bonus game.
+	bool bTriggerBonusGame = true;
+	for (size_t i = 0; i < 3; i++)
+	{
+		const Symbol S0 = Result[i];
+		const Symbol S1 = Result[i + 3];
+		const Symbol S2 = Result[i + 6];
+
+		const bool bColumnContainsBonusSymbol =
+			S0 == B1 ||
+			S1 == B1 ||
+			S2 == B1;
+
+		// if at least one reel does not contain the bonus symbol, we will not trigger bonus game.
+		if (!bColumnContainsBonusSymbol)
+		{
+			// No bonus.
+			bTriggerBonusGame = false;
+			break;
+		}
+	}
+
+	if (bTriggerBonusGame)
+	{
+		// bWon								= true;
+		const float BonusWon				= BonusGamePtr->Play(10.0f);
+		SlotmachineResults.BonusCreditsWon	= SlotmachineResults.BonusCreditsWon + BonusWon;
+		// SlotmachineResults.UpdateFrequency(Slots::Symbol::B1);
+		// Display(Result);
 	}
 
 	if (bWon)
@@ -130,112 +161,58 @@ void Slots::SlotMachine::CalculateWins(const std::vector<Slots::Symbol>& Result)
 	}
 }
 
-const float Slots::SlotMachine::GetPayout(const std::unordered_map<Slots::Symbol, int32_t>& FrequencyTable)
+float Slots::SlotMachine::GetPayout(const std::unordered_map<Symbol, int32_t>& FrequencyTable)
 {
 
 	// Find the most frequent symbol and how often it is occurring
-	Slots::Symbol MostFrequentSymbol = NONE;
+	Symbol MostFrequentSymbol = NONE;
 	int32_t SymbolFrequency = 0;
-	for (const std::pair<Slots::Symbol, int32_t>& Pair : FrequencyTable)
+	for (const auto& [First, Second] : FrequencyTable)
 	{
-		if (Pair.second > SymbolFrequency)
+		if (Second > SymbolFrequency)
 		{
-			MostFrequentSymbol	= Pair.first;
-			SymbolFrequency		= Pair.second;
+			MostFrequentSymbol	= First;
+			SymbolFrequency		= Second;
 		}
 	}
 
-	// All symbols are distinct from each other
+	// All symbols are distinct from each other => no win.
 	if (SymbolFrequency == 1)
 	{
 		return 0.0f;
 	}
 
-	auto GetFrequency = [&FrequencyTable](const Slots::Symbol& Symbol){
-		const bool bNotFound = FrequencyTable.find(Symbol) == FrequencyTable.end();
-		if (bNotFound)
-		{
-			return 0;
-		}
-
-		const int32_t Frequency = FrequencyTable.at(Symbol);
-		return Frequency;
-	};
-
-	// W1 symbols can substitute all symbols (except the bonus B1),
-	// e.g. if the payline is generating the following symbols
-	//				L2 W1 L2
-	// then W1 will be substituted as an L2 symbol.
-	const int32_t WildCards		= GetFrequency(Slots::Symbol::W1);
-	const int32_t TotalReels	= static_cast<int32_t>(Reels.size());
-	//if (WildCards + SymbolFrequency != TotalReels)
-	//{
-	//	// If we reach this part of the code, we haven't won anything.
-	//	return 0.0f;
-	//}
-
-	const bool bSameSymbolAllReels = SymbolFrequency == TotalReels;
-	if (bSameSymbolAllReels)
+	// 3 of same symbol
+	if (SymbolFrequency == 3)
 	{
-		const bool bAllWild = MostFrequentSymbol == Slots::Symbol::W1;
-		if (bAllWild)
-		{
-			// Maximum payment!
-			SlotmachineResults.AllWildCount = SlotmachineResults.AllWildCount + 1;
-		}
-
-		const bool bAllBonuses = MostFrequentSymbol == Slots::Symbol::B1;
-		if (bAllBonuses)
-		{
-			// Todo: Trigger bonus round
-			// const float Payout = BonusGame.Play();
-			SlotmachineResults.Bonuses = SlotmachineResults.Bonuses + 1;
-			if (BonusGamePtr)
-			{
-				const float Total					= BonusGamePtr->Play(10.0f);
-				SlotmachineResults.BonusCreditsWon	= SlotmachineResults.BonusCreditsWon + Total;
-				return Total;
-			}
-
-			return 0.0f;
-		}
-
+		// Return payment according to the pay table
+		SlotmachineResults.UpdateFrequency(MostFrequentSymbol);
 		return PayTable[MostFrequentSymbol];
 	}
 
-	// 3 in a row
-	if (SymbolFrequency == 2 && WildCards != 0)
+	// At least one is Wild
+	if (FrequencyTable.find(W1) != FrequencyTable.end())
 	{
-		if (WildCards == 1)
+		for (const auto& [First, Second] : FrequencyTable)
 		{
-			if (MostFrequentSymbol == Symbol::B1)
+			const Symbol Symbol = First;
+			if (Symbol != W1)
 			{
-				return 0.0f;
-			}
-
-			return PayTable[MostFrequentSymbol];
-		}
-
-		// In the case the most frequent symbol is W1, for example as the sequence
-		// W1 W1 H2
-		// then the pay out should be still count as 3 x H2 according to the pay table.
-		if (WildCards == 2)
-		{
-			for (std::pair<Slots::Symbol, int32_t> Pair : FrequencyTable)
-			{
-				if (Pair.first != Slots::Symbol::W1)
+				if (FrequencyTable.at(Symbol) == 2)
 				{
-					MostFrequentSymbol = Pair.first;
-					break;
+					SlotmachineResults.UpdateFrequency(Symbol);
+					// Payout according to pay table
+					return PayTable[Symbol];
+				}
+				else if (FrequencyTable.at(Symbol) == 1 && FrequencyTable.at(W1) == 2)
+				{
+					SlotmachineResults.UpdateFrequency(Symbol);
+					return PayTable[Symbol];
 				}
 			}
-
-			return PayTable[MostFrequentSymbol];
 		}
 	}
 
-	//const std::string StrSymbol = SymbolManager::ToString(MostFrequentSymbol);
-	//std::cout << "Most frequent symbol is : " << StrSymbol << '\n';
 	return 0.0f;
 }
 
@@ -243,37 +220,42 @@ void Slots::SlotMachine::InitializePayTable()
 {
 	// Todo: Make this into a .txt file instead and read the data to the
 	// slot machine.
-	std::pair<Slots::Symbol, float> Pair;
-	Pair.first	= Slots::Symbol::W1;
+	std::pair<Symbol, float> Pair;
+	Pair.first	= W1;
 	Pair.second = 2000.0f;
 	PayTable.insert(Pair);
 
-	Pair.first	= Slots::Symbol::H1;
+	Pair.first	= H1;
 	Pair.second = 800.0f;
 	PayTable.insert(Pair);
 
-	Pair.first	= Slots::Symbol::H2;
+	Pair.first	= H2;
 	Pair.second = 400.0f;
 	PayTable.insert(Pair);
 
-	Pair.first	= Slots::Symbol::H3;
+	Pair.first	= H3;
 	Pair.second = 80.0f;
 	PayTable.insert(Pair);
 
-	Pair.first	= Slots::Symbol::L1;
+	Pair.first	= L1;
 	Pair.second = 60.0f;
 	PayTable.insert(Pair);
 
-	Pair.first	= Slots::Symbol::L2;
+	Pair.first	= L2;
 	Pair.second = 20.0f;
 	PayTable.insert(Pair);
 
-	Pair.first	= Slots::Symbol::L3;
+	Pair.first	= L3;
 	Pair.second = 16.0f;
 	PayTable.insert(Pair);
 
-	Pair.first	= Slots::Symbol::L4;
+	Pair.first	= L4;
 	Pair.second = 12.0f;
+	PayTable.insert(Pair);
+
+	// The bonus is handled separately
+	Pair.first = B1;
+	Pair.second = 0.0f;
 	PayTable.insert(Pair);
 }
 

@@ -9,7 +9,7 @@
 #include "Reel.h"
 #include "BonusGame.h"
 
-int32_t CopyPaylines(const std::string FilePath, std::vector<int32_t, std::allocator<int32_t>>& OutPaylines)
+int32_t CopyPaylines(const std::string& FilePath, std::vector<int32_t>& OutPaylines)
 {
 	std::fstream File;
 	File.open(FilePath, std::ios::in);
@@ -33,7 +33,7 @@ int32_t CopyPaylines(const std::string FilePath, std::vector<int32_t, std::alloc
 					continue;
 				}
 
-				const int32_t ToInteger = static_cast<int32_t>(atoi(&Character));
+				const int32_t ToInteger = atoi(&Character);
 				OutPaylines[Index]		= ToInteger;
 				Index					= Index + 1;
 			}
@@ -43,7 +43,7 @@ int32_t CopyPaylines(const std::string FilePath, std::vector<int32_t, std::alloc
 	return TotalPaylines;
 }
 
-void CopyDataToReel(const std::string FilePath, Slots::Reel& OutReel)
+void CopyDataToReel(const std::string& FilePath, Slots::Reel& OutReel)
 {
 	std::vector<Slots::Symbol> Data;
 	std::fstream File;
@@ -63,7 +63,7 @@ void CopyDataToReel(const std::string FilePath, Slots::Reel& OutReel)
 	OutReel.Initialize(Data);
 }
 
-void CopyCoinWeightTable(const std::string FilePath, Slots::BonusGame& OutBonusGame)
+void CopyCoinWeightTable(const std::string& FilePath, Slots::BonusGame& OutBonusGame)
 {
 	std::vector<Slots::Coin> Coins;
 	std::fstream File;
@@ -110,7 +110,7 @@ int main()
 {
     std::cout << "Probability Simulation for a slot machine!\n";
 
-	const int32_t Rows = 3;
+	constexpr  int32_t Rows = 3;
 	Slots::SlotMachine SlotMachine(Rows);
 
 	// ------------------------------------------------------------------
@@ -129,26 +129,29 @@ int main()
 		SlotMachine.AddReel(Reel2);
 
 		// Initialize the paylines
-		std::vector<int32_t, std::allocator<int32_t>> Paylines(5 * 9);
+		std::vector<int32_t> Paylines(5 * 9);
 		const int32_t TotalPaylines = CopyPaylines("Paylines3x3.txt", Paylines);
 		SlotMachine.SetPaylines(Paylines, TotalPaylines);
 
 		// Initialize the bonus game
 		Slots::BonusGame BonusGame;
 		CopyCoinWeightTable("CoinWeightTable.txt", BonusGame);
+		BonusGame.Simulate(); // For testing purposes, not required.
 		
 		SlotMachine.SetBonusGame(BonusGame);
 	}
 
+	std::cout << "\nRunning slot machine simulation ... \n";
+
 	auto Since = [](std::chrono::time_point<std::chrono::steady_clock> const& Start)
 	{
-		std::chrono::steady_clock::time_point End = std::chrono::steady_clock::now();
+		const std::chrono::steady_clock::time_point End = std::chrono::steady_clock::now();
 		return std::chrono::duration_cast<std::chrono::seconds>(End - Start);
 	};
 
 	const std::chrono::time_point<std::chrono::steady_clock> Start = std::chrono::steady_clock::now();
 	// Play the game a couple of times!
-	const int32_t BigNumber = 100;
+	constexpr int32_t BigNumber = 1000000;
 	for (int32_t i = 0; i < BigNumber; i++)
 	{
 		SlotMachine.Play();

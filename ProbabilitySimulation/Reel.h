@@ -14,9 +14,9 @@ namespace Slots
 
 		void Initialize(const std::vector<Symbol>& ReelSymbols);
 		void Spin();
-		const std::vector<Symbol> GetResult(const int32_t Rows = 3);
+		std::vector<Symbol> GetResult(const int32_t Rows = 3) const;
 
-		void Print();
+		void Print() const;
 	private:
 		std::vector<Symbol> ReelSymbols;
 		int32_t	ReelIndex = 0;
